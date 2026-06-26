@@ -1,11 +1,20 @@
 #include <stdio.h>
 #include "menus.h"
 
-int menuPrincipal(){
+/* Limpia el buffer para evitar errores con scanf */
+static void limpiarBuffer(void){ //el static significa que esta funcion solo se puede usar dentro de esr=te archivo
+
+    int c;
+
+    while((c = getchar()) != '\n' && c != EOF){
+    }
+}
+
+int menuPrincipal(void){
 
     int opcion;
 
-    printf("===============================\n");
+    printf("\n===============================\n");
     printf("\n\t S P O T I F Y\n");
     printf("\n===============================\n");
 
@@ -14,7 +23,13 @@ int menuPrincipal(){
     printf("\n3. Salir");
 
     printf("\n\nSeleccione una opcion: ");
-    scanf("%d", &opcion);
+
+    if(scanf("%d", &opcion) != 1){
+        limpiarBuffer();
+        return -1;
+    }
+
+    limpiarBuffer();
 
     return opcion;
 }

@@ -1,11 +1,7 @@
 #include <stdio.h>
-#include <stdlib.h>
-
 #include "menus.h"
 
-void limpiarBuffer();
-
-int main(){
+int main(void){
 
     int opcion;
 
@@ -29,17 +25,10 @@ int main(){
 
             default:
                 printf("\nOpcion invalida.\n");
+                break;
         }
 
     }while(opcion != 3);
 
     return 0;
-}
-
-void limpiarBuffer(){
-
-    int c;
-
-    while((c = getchar()) != '\n' && c != EOF);
-
 }
