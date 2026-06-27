@@ -214,3 +214,224 @@ void renovarPremium(Usuario *usuario){
     printf("Valor: $%.2f\n", usuario->valorPremium);
     printf("Nueva fecha de vencimiento: %s\n", usuario->fechaVencimientoPremium);
 }
+
+/* Libera la memoria de las playlists de un usuario */
+static void liberarPlaylistsUsuario(Playlist *playlists){
+
+    Playlist *playlistActual;
+    Playlist *playlistEliminar;
+    NodoCancionPlaylist *cancionActual;
+    NodoCancionPlaylist *cancionEliminar;
+
+    playlistActual = playlists;
+
+    while(playlistActual != NULL){
+
+        cancionActual = playlistActual->canciones;
+
+        while(cancionActual != NULL){
+
+            cancionEliminar = cancionActual;
+            cancionActual = cancionActual->sig;
+
+            if(cancionEliminar->cancion != NULL && cancionEliminar->cancion->enPlaylists > 0){
+                cancionEliminar->cancion->enPlaylists--;
+            }
+
+            free(cancionEliminar);
+        }
+
+        playlistEliminar = playlistActual;
+        playlistActual = playlistActual->sig;
+
+        free(playlistEliminar);
+    }
+}
+
+/* Libera la memoria del historial de un usuario */
+static void liberarHistorialUsuario(NodoHistorial *historial){
+
+    NodoHistorial *actual;
+    NodoHistorial *eliminar;
+
+    actual = historial;
+
+    while(actual != NULL){
+        eliminar = actual;
+        actual = actual->sig;
+
+        free(eliminar);
+    }
+}
+
+/* Libera la memoria de la lista de amigos de un usuario */
+static void liberarAmigosUsuario(NodoAmigo *amigos){
+
+    NodoAmigo *actual;
+    NodoAmigo *eliminar;
+
+    actual = amigos;
+
+    while(actual != NULL){
+        eliminar = actual;
+        actual = actual->sig;
+
+        free(eliminar);
+    }
+}
+
+/* Libera solo las estructuras internas del usuario */
+static void liberarDatosUsuario(Usuario *usuario){
+
+    if(usuario == NULL){
+        return;
+    }
+
+    liberarPlaylistsUsuario(usuario->playlists);
+    liberarHistorialUsuario(usuario->historial);
+    liberarAmigosUsuario(usuario->amigos);
+
+    usuario->playlists = NULL;
+    usuario->historial = NULL;
+    usuario->amigos = NULL;
+}
+
+/* Actualiza datos editables de un usuario */
+/* El correo no se cambia porque es la clave del ABB */
+void actualizarUsuario(Usuario *usuario){
+
+    char nuevoNombre[MAX_NOMBRE];
+    char nuevoPais[MAX_PAIS];
+    char nuevoNickname[MAX_NICKNAME];
+    char nuevaContrasena[MAX_CONTRASENA];
+
+    if(usuario == NULL){
+        printf("\nNo hay usuario seleccionado.\n");
+        return;
+    }
+
+    printf("\n===== ACTUALIZAR USUARIO =====\n");
+    printf("Correo: %s\n", usuario->correo);
+    printf("Si no desea cambiar un dato, presione ENTER.\n");
+
+    leerCadena("Nuevo nombre: ", nuevoNombre, MAX_NOMBRE);
+    if(strlen(nuevoNombre) > 0){
+        strcpy(usuario->nombre, nuevoNombre);
+    }
+
+    leerCadena("Nuevo pais: ", nuevoPais, MAX_PAIS);
+    if(strlen(nuevoPais) > 0){
+        strcpy(usuario->pais, nuevoPais);
+    }
+
+    leerCadena("Nuevo nickname: ", nuevoNickname, MAX_NICKNAME);
+    if(strlen(nuevoNickname) > 0){
+        strcpy(usuario->nickname, nuevoNickname);
+    }
+
+    leerCadena("Nueva contrasena: ", nuevaContrasena, MAX_CONTRASENA);
+    if(strlen(nuevaContrasena) > 0){
+        strcpy(usuario->contrasena, nuevaContrasena);
+    }
+
+    printf("\nUsuario actualizado correctamente.\n");
+}
+
+/* Extrae el menor nodo de un subarbol */
+/* Se usa para eliminar un usuario con dos hijos */
+static Usuario *extraerMenorUsuario(Usuario **raiz){
+
+    Usuario *menor;
+
+    if(raiz == NULL || *raiz == NULL){
+        return NULL;
+    }
+
+    if((*raiz)->izq == NULL){
+
+        menor = *raiz;
+        *raiz = (*raiz)->der;
+
+        menor->izq = NULL;
+        menor->der = NULL;
+
+        return menor;
+    }
+
+    return extraerMenorUsuario(&((*raiz)->izq));
+}
+
+/* Elimina un usuario del ABB usando el correo */
+void eliminarUsuario(Usuario **raiz, char correo[]){
+
+    int comparacion;
+    Usuario *eliminar;
+    Usuario *sucesor;
+
+    if(raiz == NULL || *raiz == NULL){
+        printf("\nNo se encontro un usuario con ese correo.\n");
+        return;
+    }
+
+    comparacion = strcmp(correo, (*raiz)->correo);
+
+    if(comparacion < 0){
+        eliminarUsuario(&((*raiz)->izq), correo);
+    }
+    else if(comparacion > 0){
+        eliminarUsuario(&((*raiz)->der), correo);
+    }
+    else{
+
+        eliminar = *raiz;
+
+        /* Caso 1: no tiene hijos */
+        if(eliminar->izq == NULL && eliminar->der == NULL){
+
+            *raiz = NULL;
+
+            liberarDatosUsuario(eliminar);
+            free(eliminar);
+
+            printf("\nUsuario eliminado correctamente.\n");
+        }
+
+        /* Caso 2: solo tiene hijo derecho */
+        else if(eliminar->izq == NULL){
+
+            *raiz = eliminar->der;
+
+            liberarDatosUsuario(eliminar);
+            free(eliminar);
+
+            printf("\nUsuario eliminado correctamente.\n");
+        }
+
+        /* Caso 3: solo tiene hijo izquierdo */
+        else if(eliminar->der == NULL){
+
+            *raiz = eliminar->izq;
+
+            liberarDatosUsuario(eliminar);
+            free(eliminar);
+
+            printf("\nUsuario eliminado correctamente.\n");
+        }
+
+        /* Caso 4: tiene dos hijos */
+        else{
+
+            sucesor = extraerMenorUsuario(&(eliminar->der));
+
+            sucesor->izq = eliminar->izq;
+            sucesor->der = eliminar->der;
+
+            *raiz = sucesor;
+
+            liberarDatosUsuario(eliminar);
+            free(eliminar);
+
+            printf("\nUsuario eliminado correctamente.\n");
+        }
+    }
+}

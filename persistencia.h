@@ -12,4 +12,7 @@ void cargarAnunciosDesdeArchivo(ColaAnuncios *cola, char nombreArchivo[]);
 void guardarArtistasEnArchivo(Artista *raiz, char nombreArchivo[]);
 void cargarArtistasDesdeArchivo(Artista **raiz, char nombreArchivo[]);
 
+void guardarPlaylistsEnArchivo(Usuario *raizUsuarios, char nombreArchivo[]);
+void cargarPlaylistsDesdeArchivo(Usuario *raizUsuarios, Artista *raizArtistas, char nombreArchivo[]);
+
 #endif

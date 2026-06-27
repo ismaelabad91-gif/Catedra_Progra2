@@ -6,6 +6,7 @@
 #include "usuarios.h"
 #include "anuncios.h"
 #include "artistas.h"
+#include "playlist.h"
 
 /* Copia texto de forma segura */
 static void copiarTexto(char destino[], char origen[], int tamanio){
@@ -527,7 +528,7 @@ static void cargarLineaArtista(Artista **raiz, char linea[]){
         duracion,
         archivoOrigen,
         reproducciones,
-        enPlaylists
+        0
     );
 
     if(cancionNueva != NULL){
@@ -560,4 +561,209 @@ void cargarArtistasDesdeArchivo(Artista **raiz, char nombreArchivo[]){
     fclose(archivo);
 
     printf("\nArtistas cargados correctamente desde %s.\n", nombreArchivo);
+}
+
+/* Guarda las canciones de una playlist */
+static void guardarUnaPlaylist(FILE *archivo, char correoUsuario[], Playlist *playlist){
+
+    NodoCancionPlaylist *actual;
+
+    if(playlist->canciones == NULL){
+
+        fprintf(
+            archivo,
+            "%s|%s|VACIO|VACIO\n",
+            correoUsuario,
+            playlist->nombre
+        );
+
+        return;
+    }
+
+    actual = playlist->canciones;
+
+    while(actual != NULL){
+
+        fprintf(
+            archivo,
+            "%s|%s|%s|%s\n",
+            correoUsuario,
+            playlist->nombre,
+            actual->cancion->artista,
+            actual->cancion->nombre
+        );
+
+        actual = actual->sig;
+    }
+}
+
+/* Guarda todas las playlists de un usuario */
+static void guardarPlaylistsUsuario(FILE *archivo, Usuario *usuario){
+
+    Playlist *actual;
+
+    actual = usuario->playlists;
+
+    while(actual != NULL){
+
+        guardarUnaPlaylist(archivo, usuario->correo, actual);
+
+        actual = actual->sig;
+    }
+}
+
+/* Recorre el ABB de usuarios para guardar playlists */
+static void guardarPlaylistsRecursivo(FILE *archivo, Usuario *raizUsuarios){
+
+    if(raizUsuarios != NULL){
+
+        guardarPlaylistsRecursivo(archivo, raizUsuarios->izq);
+
+        guardarPlaylistsUsuario(archivo, raizUsuarios);
+
+        guardarPlaylistsRecursivo(archivo, raizUsuarios->der);
+    }
+}
+
+/* Guarda todas las playlists en un archivo txt */
+void guardarPlaylistsEnArchivo(Usuario *raizUsuarios, char nombreArchivo[]){
+
+    FILE *archivo;
+
+    archivo = fopen(nombreArchivo, "w");
+
+    if(archivo == NULL){
+        printf("\nNo se pudo abrir el archivo de playlists para guardar.\n");
+        return;
+    }
+
+    guardarPlaylistsRecursivo(archivo, raizUsuarios);
+
+    fclose(archivo);
+
+    printf("\nPlaylists guardadas correctamente en %s.\n", nombreArchivo);
+}
+
+/* Crea una playlist desde archivo sin pedir datos por teclado */
+static Playlist *crearPlaylistDesdeArchivo(char nombrePlaylist[]){
+
+    Playlist *nueva;
+
+    nueva = (Playlist *)malloc(sizeof(Playlist));
+
+    if(nueva == NULL){
+        printf("\nNo se pudo reservar memoria para cargar playlist.\n");
+        return NULL;
+    }
+
+    copiarTexto(nueva->nombre, nombrePlaylist, MAX_NOMBRE);
+
+    nueva->canciones = NULL;
+    nueva->sig = NULL;
+
+    return nueva;
+}
+
+/* Carga una linea del archivo playlists.txt */
+static void cargarLineaPlaylist(Usuario *raizUsuarios, Artista *raizArtistas, char linea[]){
+
+    char *campo;
+
+    char correoUsuario[MAX_CORREO];
+    char nombrePlaylist[MAX_NOMBRE];
+    char nombreArtista[MAX_NOMBRE];
+    char nombreCancion[MAX_NOMBRE];
+
+    Usuario *usuarioEncontrado;
+    Playlist *playlistEncontrada;
+    Playlist *nuevaPlaylist;
+    Cancion *cancionEncontrada;
+
+    campo = strtok(linea, "|");
+
+    if(campo == NULL){
+        return;
+    }
+    copiarTexto(correoUsuario, campo, MAX_CORREO);
+
+    campo = strtok(NULL, "|");
+
+    if(campo == NULL){
+        return;
+    }
+    copiarTexto(nombrePlaylist, campo, MAX_NOMBRE);
+
+    campo = strtok(NULL, "|");
+
+    if(campo == NULL){
+        return;
+    }
+    copiarTexto(nombreArtista, campo, MAX_NOMBRE);
+
+    campo = strtok(NULL, "|");
+
+    if(campo == NULL){
+        return;
+    }
+    copiarTexto(nombreCancion, campo, MAX_NOMBRE);
+
+    usuarioEncontrado = buscarUsuarioPorCorreo(raizUsuarios, correoUsuario);
+
+    if(usuarioEncontrado == NULL){
+        return;
+    }
+
+    playlistEncontrada = buscarPlaylist(usuarioEncontrado, nombrePlaylist);
+
+    if(playlistEncontrada == NULL){
+
+        nuevaPlaylist = crearPlaylistDesdeArchivo(nombrePlaylist);
+
+        if(nuevaPlaylist == NULL){
+            return;
+        }
+
+        agregarPlaylistAUsuario(usuarioEncontrado, nuevaPlaylist);
+
+        playlistEncontrada = nuevaPlaylist;
+    }
+
+    if(strcmp(nombreArtista, "VACIO") == 0 && strcmp(nombreCancion, "VACIO") == 0){
+        return;
+    }
+
+    cancionEncontrada = buscarCancionPorArtistaYNombre(raizArtistas, nombreArtista, nombreCancion);
+
+    if(cancionEncontrada == NULL){
+        return;
+    }
+
+    agregarCancionAPlaylist(playlistEncontrada, cancionEncontrada);
+}
+
+/* Carga playlists desde archivo txt */
+void cargarPlaylistsDesdeArchivo(Usuario *raizUsuarios, Artista *raizArtistas, char nombreArchivo[]){
+
+    FILE *archivo;
+    char linea[500];
+
+    archivo = fopen(nombreArchivo, "r");
+
+    if(archivo == NULL){
+        printf("\nNo se encontro %s. Se iniciara sin playlists guardadas.\n", nombreArchivo);
+        return;
+    }
+
+    while(fgets(linea, sizeof(linea), archivo) != NULL){
+
+        linea[strcspn(linea, "\n")] = '\0';
+
+        if(strlen(linea) > 0){
+            cargarLineaPlaylist(raizUsuarios, raizArtistas, linea);
+        }
+    }
+
+    fclose(archivo);
+
+    printf("\nPlaylists cargadas correctamente desde %s.\n", nombreArchivo);
 }

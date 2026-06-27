@@ -12,6 +12,9 @@ void menuUsuario(Usuario *usuarioActual, Artista *raizArtistas, ColaAnuncios *co
 void menuDesarrollador(Usuario **raizUsuarios, Artista **raizArtistas, ColaAnuncios *colaAnuncios);
 void menuCRUDUsuarios(Usuario **raizUsuarios);
 void menuCRUDArtistas(Artista **raizArtistas);
+void menuCRUDCanciones(Artista **raizArtistas);
 void menuGestionAnuncios(ColaAnuncios *colaAnuncios);
+
+void menuPlaylists(Usuario *usuarioActual, Artista *raizArtistas);
 
 #endif

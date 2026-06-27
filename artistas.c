@@ -398,3 +398,134 @@ void mostrarCancionesDisco(Disco *disco){
         contador++;
     }
 }
+
+/* Busca una cancion usando el nombre del artista y el nombre de la cancion */
+Cancion *buscarCancionPorArtistaYNombre(Artista *raiz, char nombreArtista[], char nombreCancion[]){
+
+    Artista *artistaEncontrado;
+    Disco *discoActual;
+    Cancion *cancionActual;
+
+    artistaEncontrado = buscarArtista(raiz, nombreArtista);
+
+    if(artistaEncontrado == NULL){
+        return NULL;
+    }
+
+    discoActual = artistaEncontrado->listaDiscos;
+
+    while(discoActual != NULL){
+
+        cancionActual = discoActual->listaCanciones;
+
+        while(cancionActual != NULL){
+
+            if(strcmp(cancionActual->nombre, nombreCancion) == 0){
+                return cancionActual;
+            }
+
+            cancionActual = cancionActual->sig;
+        }
+
+        discoActual = discoActual->sig;
+    }
+
+    return NULL;
+}
+
+/* Actualiza datos editables de una cancion */
+void actualizarCancion(Cancion *cancion){
+
+    char nuevoNombre[MAX_NOMBRE];
+    char nuevoArchivo[MAX_ORIGEN];
+    int nuevaDuracion;
+
+    if(cancion == NULL){
+        printf("\nNo hay cancion seleccionada.\n");
+        return;
+    }
+
+    printf("\n===== ACTUALIZAR CANCION =====\n");
+    printf("Cancion actual: %s\n", cancion->nombre);
+    printf("Artista: %s\n", cancion->artista);
+    printf("Si no desea cambiar texto, presione ENTER.\n");
+
+    leerTexto("Nuevo nombre de la cancion: ", nuevoNombre, MAX_NOMBRE);
+
+    if(strlen(nuevoNombre) > 0){
+        strcpy(cancion->nombre, nuevoNombre);
+    }
+
+    printf("Nueva duracion en segundos, escriba 0 para no cambiar: ");
+
+    if(scanf("%d", &nuevaDuracion) != 1){
+        limpiarBuffer();
+        printf("\nDuracion invalida. No se cambio la duracion.\n");
+    }
+    else{
+        limpiarBuffer();
+
+        if(nuevaDuracion > 0){
+            cancion->duracionSegundos = nuevaDuracion;
+        }
+    }
+
+    leerTexto("Nuevo archivo de origen: ", nuevoArchivo, MAX_ORIGEN);
+
+    if(strlen(nuevoArchivo) > 0){
+        strcpy(cancion->archivoOrigen, nuevoArchivo);
+    }
+
+    printf("\nCancion actualizada correctamente.\n");
+}
+
+/* Elimina una cancion de un disco si no pertenece a playlists */
+/* Retorna 1 si elimina, 0 si no elimina */
+int eliminarCancionDeDisco(Disco *disco, char nombreCancion[]){
+
+    Cancion *actual;
+    Cancion *anterior;
+
+    if(disco == NULL){
+        printf("\nNo hay disco seleccionado.\n");
+        return 0;
+    }
+
+    if(disco->listaCanciones == NULL){
+        printf("\nEl disco no tiene canciones.\n");
+        return 0;
+    }
+
+    actual = disco->listaCanciones;
+    anterior = NULL;
+
+    while(actual != NULL){
+
+        if(strcmp(actual->nombre, nombreCancion) == 0){
+
+            if(actual->enPlaylists > 0){
+                printf("\nNo se puede eliminar la cancion porque pertenece a una playlist.\n");
+                printf("Cantidad de playlists donde aparece: %d\n", actual->enPlaylists);
+                return 0;
+            }
+
+            if(anterior == NULL){
+                disco->listaCanciones = actual->sig;
+            }
+            else{
+                anterior->sig = actual->sig;
+            }
+
+            free(actual);
+
+            printf("\nCancion eliminada correctamente.\n");
+            return 1;
+        }
+
+        anterior = actual;
+        actual = actual->sig;
+    }
+
+    printf("\nNo se encontro esa cancion en el disco.\n");
+    return 0;
+}

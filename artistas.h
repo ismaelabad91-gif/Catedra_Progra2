@@ -20,6 +20,10 @@ Cancion *crearCancion(char nombreArtista[]);
 void agregarCancionADisco(Disco *disco, Cancion *nuevaCancion);
 Cancion *buscarCancionEnDisco(Disco *disco, char nombreCancion[]);
 Cancion *buscarCancionEnArtistas(Artista *raiz, char nombreCancion[]);
+Cancion *buscarCancionPorArtistaYNombre(Artista *raiz, char nombreArtista[], char nombreCancion[]);
 void mostrarCancionesDisco(Disco *disco);
+
+void actualizarCancion(Cancion *cancion);
+int eliminarCancionDeDisco(Disco *disco, char nombreCancion[]);
 
 #endif

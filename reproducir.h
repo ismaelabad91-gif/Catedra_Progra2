@@ -3,4 +3,6 @@
 
 #include "estructuras.h"
 
+void reproducirCancion(Usuario *usuario, Cancion *cancion, ColaAnuncios *colaAnuncios);
+
 #endif

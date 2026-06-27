@@ -16,12 +16,14 @@ int main(void){
     cargarUsuariosDesdeArchivo(&raizUsuarios, "usuarios.txt");
     cargarAnunciosDesdeArchivo(&colaAnuncios, "anuncios.txt");
     cargarArtistasDesdeArchivo(&raizArtistas, "artistas.txt");
+    cargarPlaylistsDesdeArchivo(raizUsuarios, raizArtistas, "playlists.txt");
 
     menuPrincipal(&raizUsuarios, &raizArtistas, &colaAnuncios);
 
     guardarUsuariosEnArchivo(raizUsuarios, "usuarios.txt");
     guardarAnunciosEnArchivo(colaAnuncios, "anuncios.txt");
     guardarArtistasEnArchivo(raizArtistas, "artistas.txt");
+    guardarPlaylistsEnArchivo(raizUsuarios, "playlists.txt");
 
     return 0;
 }

@@ -7,6 +7,8 @@
 #include "historial.h"
 #include "anuncios.h"
 #include "artistas.h"
+#include "reproducir.h"
+#include "playlist.h"
 
 /* Limpia el buffer para evitar errores con scanf */
 static void limpiarBuffer(void){
@@ -142,9 +144,8 @@ void menuIngresar(Usuario **raizUsuarios, Artista **raizArtistas, ColaAnuncios *
 void menuUsuario(Usuario *usuarioActual, Artista *raizArtistas, ColaAnuncios *colaAnuncios){
 
     int opcion;
-
-    (void)raizArtistas;
-    (void)colaAnuncios;
+    char nombreCancion[MAX_NOMBRE];
+    Cancion *cancionEncontrada;
 
     if(usuarioActual == NULL){
         printf("\nNo hay usuario activo.\n");
@@ -170,15 +171,28 @@ void menuUsuario(Usuario *usuarioActual, Artista *raizArtistas, ColaAnuncios *co
         switch(opcion){
 
             case 1:
-                printf("\nReproducir musica pendiente de conectar.\n");
-                break;
+                if(raizArtistas == NULL){
+                    printf("\nNo hay canciones registradas en el sistema.\n");
+                }
+                else{
+                    leerTexto("\nNombre de la cancion a reproducir: ", nombreCancion, MAX_NOMBRE);
+                    cancionEncontrada = buscarCancionEnArtistas(raizArtistas, nombreCancion);
+                    if(cancionEncontrada == NULL){
+                        printf("\nNo se encontro una cancion con ese nombre.\n");
+                    }
+                    else{
+                        reproducirCancion(usuarioActual, cancionEncontrada, colaAnuncios);
+                    }
+                }
+
+    break;
 
             case 2:
                 mostrarHistorial(usuarioActual);
                 break;
 
             case 3:
-                printf("\nPlaylists pendiente de implementar.\n");
+                menuPlaylists(usuarioActual, raizArtistas);
                 break;
 
             case 4:
@@ -233,7 +247,7 @@ void menuDesarrollador(Usuario **raizUsuarios, Artista **raizArtistas, ColaAnunc
                 break;
 
             case 3:
-                printf("\nCRUD canciones pendiente de implementar.\n");
+                menuCRUDCanciones(raizArtistas);
                 break;
 
             case 4:
@@ -269,7 +283,9 @@ void menuCRUDUsuarios(Usuario **raizUsuarios){
         printf("\n1. Crear usuario");
         printf("\n2. Buscar usuario por correo");
         printf("\n3. Mostrar usuarios");
-        printf("\n4. Volver");
+        printf("\n4. Actualizar usuario");
+        printf("\n5. Eliminar usuario");
+        printf("\n6. Volver");
 
         printf("\n\nSeleccione una opcion: ");
         opcion = leerOpcion();
@@ -316,15 +332,46 @@ void menuCRUDUsuarios(Usuario **raizUsuarios){
                 break;
 
             case 4:
-                printf("\nVolviendo al modo desarrollador...\n");
+                leerTexto("\nIngrese el correo del usuario a actualizar: ", correo, MAX_CORREO);
+
+                encontrado = buscarUsuarioPorCorreo(*raizUsuarios, correo);
+
+                if(encontrado == NULL){
+                    printf("\nNo existe un usuario con ese correo.\n");
+                }
+                else{
+                    actualizarUsuario(encontrado);
+                }
+
                 break;
 
-            default:
-                printf("\nOpcion invalida.\n");
+            case 5:
+                leerTexto("\nIngrese el correo del usuario a eliminar: ", correo, MAX_CORREO);
+
+                encontrado = buscarUsuarioPorCorreo(*raizUsuarios, correo);
+
+                if(encontrado == NULL){
+                    printf("\nNo existe un usuario con ese correo.\n");
+                }
+                else{
+                    printf("\nUsuario encontrado:\n");
+                    printf("Correo: %s\n", encontrado->correo);
+                    printf("Nombre: %s\n", encontrado->nombre);
+                    printf("Nickname: %s\n", encontrado->nickname);
+
+                    printf("\nEliminando usuario...\n");
+
+                    eliminarUsuario(raizUsuarios, correo);
+                }
+
+                break;
+
+            case 6:
+                printf("\nVolviendo al modo desarrollador...\n");
                 break;
         }
 
-    }while(opcion != 4);
+    }while(opcion != 6);
 }
 
 /* Menu para gestionar anuncios */
@@ -554,4 +601,260 @@ void menuCRUDArtistas(Artista **raizArtistas){
         }
 
     }while(opcion != 8);
+}
+
+/* Menu de playlists del usuario */
+void menuPlaylists(Usuario *usuarioActual, Artista *raizArtistas){
+
+    int opcion;
+    Playlist *nuevaPlaylist;
+    Playlist *playlistEncontrada;
+    Cancion *cancionEncontrada;
+
+    char nombrePlaylist[MAX_NOMBRE];
+    char nombreCancion[MAX_NOMBRE];
+
+    do{
+        printf("\n========== MIS PLAYLISTS ==========\n");
+        printf("\n1. Crear playlist");
+        printf("\n2. Mostrar mis playlists");
+        printf("\n3. Agregar cancion a playlist");
+        printf("\n4. Quitar cancion de playlist");
+        printf("\n5. Mostrar canciones de una playlist");
+        printf("\n6. Volver");
+
+        printf("\n\nSeleccione una opcion: ");
+        opcion = leerOpcion();
+
+        switch(opcion){
+
+            case 1:
+                nuevaPlaylist = crearPlaylist();
+
+                if(nuevaPlaylist != NULL){
+
+                    if(buscarPlaylist(usuarioActual, nuevaPlaylist->nombre) != NULL){
+                        printf("\nYa existe una playlist con ese nombre.\n");
+                        free(nuevaPlaylist);
+                    }
+                    else{
+                        agregarPlaylistAUsuario(usuarioActual, nuevaPlaylist);
+                    }
+                }
+
+                break;
+
+            case 2:
+                mostrarPlaylists(usuarioActual);
+                break;
+
+            case 3:
+                if(raizArtistas == NULL){
+                    printf("\nNo hay canciones registradas en el sistema.\n");
+                }
+                else{
+                    leerTexto("\nNombre de la playlist: ", nombrePlaylist, MAX_NOMBRE);
+
+                    playlistEncontrada = buscarPlaylist(usuarioActual, nombrePlaylist);
+
+                    if(playlistEncontrada == NULL){
+                        printf("\nNo existe esa playlist.\n");
+                    }
+                    else{
+                        leerTexto("Nombre de la cancion: ", nombreCancion, MAX_NOMBRE);
+
+                        cancionEncontrada = buscarCancionEnArtistas(raizArtistas, nombreCancion);
+
+                        if(cancionEncontrada == NULL){
+                            printf("\nNo existe una cancion con ese nombre.\n");
+                        }
+                        else{
+                            agregarCancionAPlaylist(playlistEncontrada, cancionEncontrada);
+                        }
+                    }
+                }
+
+                break;
+
+            case 4:
+                leerTexto("\nNombre de la playlist: ", nombrePlaylist, MAX_NOMBRE);
+
+                playlistEncontrada = buscarPlaylist(usuarioActual, nombrePlaylist);
+
+                if(playlistEncontrada == NULL){
+                    printf("\nNo existe esa playlist.\n");
+                }
+                else{
+                    leerTexto("Nombre de la cancion a quitar: ", nombreCancion, MAX_NOMBRE);
+                    quitarCancionDePlaylist(playlistEncontrada, nombreCancion);
+                }
+
+                break;
+
+            case 5:
+                leerTexto("\nNombre de la playlist: ", nombrePlaylist, MAX_NOMBRE);
+
+                playlistEncontrada = buscarPlaylist(usuarioActual, nombrePlaylist);
+
+                if(playlistEncontrada == NULL){
+                    printf("\nNo existe esa playlist.\n");
+                }
+                else{
+                    mostrarCancionesPlaylist(playlistEncontrada);
+                }
+
+                break;
+
+            case 6:
+                printf("\nVolviendo al menu de usuario...\n");
+                break;
+
+            default:
+                printf("\nOpcion invalida.\n");
+                break;
+        }
+
+    }while(opcion != 6);
+}
+
+/* Menu CRUD de canciones */
+void menuCRUDCanciones(Artista **raizArtistas){
+
+    int opcion;
+    Artista *artistaEncontrado;
+    Disco *discoEncontrado;
+    Cancion *cancionEncontrada;
+
+    char nombreArtista[MAX_NOMBRE];
+    char nombreDisco[MAX_NOMBRE];
+    char nombreCancion[MAX_NOMBRE];
+
+    do{
+        printf("\n========== CRUD CANCIONES ==========\n");
+        printf("\n1. Buscar cancion por nombre");
+        printf("\n2. Mostrar canciones de un disco");
+        printf("\n3. Actualizar cancion");
+        printf("\n4. Eliminar cancion");
+        printf("\n5. Volver");
+
+        printf("\n\nSeleccione una opcion: ");
+        opcion = leerOpcion();
+
+        switch(opcion){
+
+            case 1:
+                if(*raizArtistas == NULL){
+                    printf("\nNo hay artistas ni canciones registradas.\n");
+                }
+                else{
+                    leerTexto("\nNombre de la cancion a buscar: ", nombreCancion, MAX_NOMBRE);
+
+                    cancionEncontrada = buscarCancionEnArtistas(*raizArtistas, nombreCancion);
+
+                    if(cancionEncontrada == NULL){
+                        printf("\nNo se encontro la cancion.\n");
+                    }
+                    else{
+                        printf("\nCancion encontrada:\n");
+                        printf("Nombre: %s\n", cancionEncontrada->nombre);
+                        printf("Artista: %s\n", cancionEncontrada->artista);
+                        printf("Duracion: %d segundos\n", cancionEncontrada->duracionSegundos);
+                        printf("Archivo: %s\n", cancionEncontrada->archivoOrigen);
+                        printf("Reproducciones: %d\n", cancionEncontrada->reproducciones);
+                        printf("En playlists: %d\n", cancionEncontrada->enPlaylists);
+                    }
+                }
+
+                break;
+
+            case 2:
+                leerTexto("\nNombre del artista: ", nombreArtista, MAX_NOMBRE);
+
+                artistaEncontrado = buscarArtista(*raizArtistas, nombreArtista);
+
+                if(artistaEncontrado == NULL){
+                    printf("\nNo existe ese artista.\n");
+                }
+                else{
+                    leerTexto("Nombre del disco: ", nombreDisco, MAX_NOMBRE);
+
+                    discoEncontrado = buscarDisco(artistaEncontrado, nombreDisco);
+
+                    if(discoEncontrado == NULL){
+                        printf("\nNo existe ese disco.\n");
+                    }
+                    else{
+                        mostrarCancionesDisco(discoEncontrado);
+                    }
+                }
+
+                break;
+
+            case 3:
+                leerTexto("\nNombre del artista: ", nombreArtista, MAX_NOMBRE);
+
+                artistaEncontrado = buscarArtista(*raizArtistas, nombreArtista);
+
+                if(artistaEncontrado == NULL){
+                    printf("\nNo existe ese artista.\n");
+                }
+                else{
+                    leerTexto("Nombre del disco: ", nombreDisco, MAX_NOMBRE);
+
+                    discoEncontrado = buscarDisco(artistaEncontrado, nombreDisco);
+
+                    if(discoEncontrado == NULL){
+                        printf("\nNo existe ese disco.\n");
+                    }
+                    else{
+                        leerTexto("Nombre de la cancion a actualizar: ", nombreCancion, MAX_NOMBRE);
+
+                        cancionEncontrada = buscarCancionEnDisco(discoEncontrado, nombreCancion);
+
+                        if(cancionEncontrada == NULL){
+                            printf("\nNo existe esa cancion en el disco.\n");
+                        }
+                        else{
+                            actualizarCancion(cancionEncontrada);
+                        }
+                    }
+                }
+
+                break;
+
+            case 4:
+                leerTexto("\nNombre del artista: ", nombreArtista, MAX_NOMBRE);
+
+                artistaEncontrado = buscarArtista(*raizArtistas, nombreArtista);
+
+                if(artistaEncontrado == NULL){
+                    printf("\nNo existe ese artista.\n");
+                }
+                else{
+                    leerTexto("Nombre del disco: ", nombreDisco, MAX_NOMBRE);
+
+                    discoEncontrado = buscarDisco(artistaEncontrado, nombreDisco);
+
+                    if(discoEncontrado == NULL){
+                        printf("\nNo existe ese disco.\n");
+                    }
+                    else{
+                        leerTexto("Nombre de la cancion a eliminar: ", nombreCancion, MAX_NOMBRE);
+
+                        eliminarCancionDeDisco(discoEncontrado, nombreCancion);
+                    }
+                }
+
+                break;
+
+            case 5:
+                printf("\nVolviendo al modo desarrollador...\n");
+                break;
+
+            default:
+                printf("\nOpcion invalida.\n");
+                break;
+        }
+
+    }while(opcion != 5);
 }

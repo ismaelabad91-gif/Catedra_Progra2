@@ -13,4 +13,7 @@ int iniciarSesion(Usuario *raiz, char correo[], char contrasena[], Usuario **usu
 void comprarPremium(Usuario *usuario);
 void renovarPremium(Usuario *usuario);
 
+void actualizarUsuario(Usuario *usuario);
+void eliminarUsuario(Usuario **raiz, char correo[]);
+
 #endif
