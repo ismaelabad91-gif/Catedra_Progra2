@@ -124,3 +124,78 @@ void mostrarUsuariosInorden(Usuario *raiz){
         mostrarUsuariosInorden(raiz->der);
     }
 }
+
+/* Inicia sesion buscando el usuario por correo y comparando contrasena */
+int iniciarSesion(Usuario *raiz, char correo[], char contrasena[], Usuario **usuarioActual){
+
+    Usuario *encontrado;
+
+    encontrado = buscarUsuarioPorCorreo(raiz, correo);
+
+    if(encontrado == NULL){
+        printf("\nNo existe un usuario con ese correo.\n");
+        return 0;
+    }
+
+    if(strcmp(encontrado->contrasena, contrasena) != 0){
+        printf("\nContrasena incorrecta.\n");
+        return 0;
+    }
+
+    *usuarioActual = encontrado;
+
+    printf("\nInicio de sesion correcto. Bienvenido, %s.\n", encontrado->nickname);
+
+    return 1;
+}
+
+/* Compra el plan premium por primera vez */
+void comprarPremium(Usuario *usuario){
+
+    if(usuario == NULL){
+        return;
+    }
+
+    if(usuario->premiumActivo == 1){
+        printf("\nEl usuario ya tiene premium activo.\n");
+        return;
+    }
+
+    printf("\n===== COMPRAR PREMIUM =====\n");
+
+    usuario->premiumActivo = 1;
+    strcpy(usuario->plan, "premium");
+
+    printf("Ingrese fecha de vencimiento del plan, formato dd/mm/aaaa: ");
+    fgets(usuario->fechaVencimientoPremium, MAX_FECHA, stdin);
+    usuario->fechaVencimientoPremium[strcspn(usuario->fechaVencimientoPremium, "\n")] = '\0';
+
+    printf("Ingrese valor pagado: ");
+    scanf("%f", &(usuario->valorPremium));
+
+    printf("\nPlan premium comprado correctamente.\n");
+}
+
+/* Renueva el plan premium */
+void renovarPremium(Usuario *usuario){
+
+    if(usuario == NULL){
+        return;
+    }
+
+    if(usuario->premiumActivo == 0){
+        printf("\nEl usuario no tiene premium activo. Primero debe comprar premium.\n");
+        return;
+    }
+
+    printf("\n===== RENOVAR PREMIUM =====\n");
+
+    printf("Ingrese nueva fecha de vencimiento, formato dd/mm/aaaa: ");
+    fgets(usuario->fechaVencimientoPremium, MAX_FECHA, stdin);
+    usuario->fechaVencimientoPremium[strcspn(usuario->fechaVencimientoPremium, "\n")] = '\0';
+
+    printf("Ingrese nuevo valor pagado: ");
+    scanf("%f", &(usuario->valorPremium));
+
+    printf("\nPlan premium renovado correctamente.\n");
+}

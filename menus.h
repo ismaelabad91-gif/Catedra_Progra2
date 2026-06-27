@@ -7,6 +7,7 @@ void menuPrincipal(Usuario **raizUsuarios);
 int leerOpcion(void);
 
 void menuIngresar(Usuario **raizUsuarios);
+void menuUsuario(Usuario *usuarioActual);
 void menuDesarrollador(Usuario **raizUsuarios);
 void menuCRUDUsuarios(Usuario **raizUsuarios);
 

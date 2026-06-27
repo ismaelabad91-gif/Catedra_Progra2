@@ -3,6 +3,7 @@
 
 #include "menus.h"
 #include "usuarios.h"
+#include "historial.h"
 
 /* Limpia el buffer para evitar errores con scanf */
 static void limpiarBuffer(void){
@@ -82,7 +83,11 @@ void menuPrincipal(Usuario **raizUsuarios){
 void menuIngresar(Usuario **raizUsuarios){
 
     int opcion;
+    int sesionCorrecta;
     Usuario *nuevo;
+    Usuario *usuarioActual;
+    char correo[MAX_CORREO];
+    char contrasena[MAX_CONTRASENA];
 
     do{
         printf("\n========== INGRESAR ==========\n");
@@ -96,7 +101,17 @@ void menuIngresar(Usuario **raizUsuarios){
         switch(opcion){
 
             case 1:
-                printf("\nIniciar sesion pendiente de implementar.\n");
+                leerTexto("\nCorreo electronico: ", correo, MAX_CORREO);
+                leerTexto("Contrasena: ", contrasena, MAX_CONTRASENA);
+
+                usuarioActual = NULL;
+
+                sesionCorrecta = iniciarSesion(*raizUsuarios, correo, contrasena, &usuarioActual);
+
+                if(sesionCorrecta == 1){
+                    menuUsuario(usuarioActual);
+                }
+
                 break;
 
             case 2:
@@ -118,6 +133,70 @@ void menuIngresar(Usuario **raizUsuarios){
         }
 
     }while(opcion != 3);
+}
+
+/* Menu del usuario que ya inicio sesion */
+void menuUsuario(Usuario *usuarioActual){
+
+    int opcion;
+
+    if(usuarioActual == NULL){
+        printf("\nNo hay usuario activo.\n");
+        return;
+    }
+
+    do{
+        printf("\n========== MENU USUARIO ==========\n");
+        printf("\nUsuario: %s", usuarioActual->nickname);
+        printf("\nPlan: %s", usuarioActual->plan);
+
+        printf("\n\n1. Reproducir musica");
+        printf("\n2. Ver historial");
+        printf("\n3. Mis playlists");
+        printf("\n4. Amigos");
+        printf("\n5. Comprar premium");
+        printf("\n6. Renovar premium");
+        printf("\n7. Cerrar sesion");
+
+        printf("\n\nSeleccione una opcion: ");
+        opcion = leerOpcion();
+
+        switch(opcion){
+
+            case 1:
+                printf("\nReproducir musica pendiente de conectar.\n");
+                break;
+
+            case 2:
+                mostrarHistorial(usuarioActual);
+                break;
+
+            case 3:
+                printf("\nPlaylists pendiente de implementar.\n");
+                break;
+
+            case 4:
+                printf("\nAmigos pendiente de implementar.\n");
+                break;
+
+            case 5:
+                comprarPremium(usuarioActual);
+                break;
+
+            case 6:
+                renovarPremium(usuarioActual);
+                break;
+
+            case 7:
+                printf("\nSesion cerrada.\n");
+                break;
+
+            default:
+                printf("\nOpcion invalida.\n");
+                break;
+        }
+
+    }while(opcion != 7);
 }
 
 /* Menu para administrador o desarrollador */

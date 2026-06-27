@@ -8,4 +8,9 @@ void insertarUsuario(Usuario **raiz, Usuario *nuevo);
 Usuario *buscarUsuarioPorCorreo(Usuario *raiz, char correo[]);
 void mostrarUsuariosInorden(Usuario *raiz);
 
+int iniciarSesion(Usuario *raiz, char correo[], char contrasena[], Usuario **usuarioActual);
+
+void comprarPremium(Usuario *usuario);
+void renovarPremium(Usuario *usuario);
+
 #endif
