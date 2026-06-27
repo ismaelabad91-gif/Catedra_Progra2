@@ -1,10 +1,13 @@
 #ifndef MENUS_H
 #define MENUS_H
 
-void menuPrincipal(void);
+#include "estructuras.h"
+
+void menuPrincipal(Usuario **raizUsuarios);
 int leerOpcion(void);
 
-void menuIngresar(void);
-void menuDesarrollador(void);
+void menuIngresar(Usuario **raizUsuarios);
+void menuDesarrollador(Usuario **raizUsuarios);
+void menuCRUDUsuarios(Usuario **raizUsuarios);
 
 #endif

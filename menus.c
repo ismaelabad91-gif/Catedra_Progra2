@@ -1,5 +1,8 @@
 #include <stdio.h>
+#include <string.h>
+
 #include "menus.h"
+#include "usuarios.h"
 
 /* Limpia el buffer para evitar errores con scanf */
 static void limpiarBuffer(void){
@@ -25,8 +28,19 @@ int leerOpcion(void){
     return opcion;
 }
 
+/* Lee texto con espacios usando fgets */
+static void leerTexto(char mensaje[], char destino[], int tamanio){
+
+    printf("%s", mensaje);
+
+    fgets(destino, tamanio, stdin);
+
+    /* Quita el salto de linea que deja fgets */
+    destino[strcspn(destino, "\n")] = '\0';
+}
+
 /* Menu principal del sistema */
-void menuPrincipal(void){
+void menuPrincipal(Usuario **raizUsuarios){
 
     int opcion;
 
@@ -45,11 +59,11 @@ void menuPrincipal(void){
         switch(opcion){
 
             case 1:
-                menuIngresar();
+                menuIngresar(raizUsuarios);
                 break;
 
             case 2:
-                menuDesarrollador();
+                menuDesarrollador(raizUsuarios);
                 break;
 
             case 3:
@@ -65,9 +79,10 @@ void menuPrincipal(void){
 }
 
 /* Menu para usuario normal */
-void menuIngresar(void){
+void menuIngresar(Usuario **raizUsuarios){
 
     int opcion;
+    Usuario *nuevo;
 
     do{
         printf("\n========== INGRESAR ==========\n");
@@ -81,11 +96,16 @@ void menuIngresar(void){
         switch(opcion){
 
             case 1:
-                printf("\nIniciar sesion...\n");
+                printf("\nIniciar sesion pendiente de implementar.\n");
                 break;
 
             case 2:
-                printf("\nRegistrarse...\n");
+                nuevo = crearUsuario();
+
+                if(nuevo != NULL){
+                    insertarUsuario(raizUsuarios, nuevo);
+                }
+
                 break;
 
             case 3:
@@ -101,7 +121,7 @@ void menuIngresar(void){
 }
 
 /* Menu para administrador o desarrollador */
-void menuDesarrollador(void){
+void menuDesarrollador(Usuario **raizUsuarios){
 
     int opcion;
 
@@ -120,23 +140,23 @@ void menuDesarrollador(void){
         switch(opcion){
 
             case 1:
-                printf("\nCRUD usuarios...\n");
+                menuCRUDUsuarios(raizUsuarios);
                 break;
 
             case 2:
-                printf("\nCRUD artistas...\n");
+                printf("\nCRUD artistas pendiente de implementar.\n");
                 break;
 
             case 3:
-                printf("\nCRUD canciones...\n");
+                printf("\nCRUD canciones pendiente de implementar.\n");
                 break;
 
             case 4:
-                printf("\nGestionar anuncios...\n");
+                printf("\nGestionar anuncios pendiente de implementar.\n");
                 break;
 
             case 5:
-                printf("\nReportes...\n");
+                printf("\nReportes pendiente de implementar.\n");
                 break;
 
             case 6:
@@ -149,4 +169,75 @@ void menuDesarrollador(void){
         }
 
     }while(opcion != 6);
+}
+
+/* Menu CRUD de usuarios */
+void menuCRUDUsuarios(Usuario **raizUsuarios){
+
+    int opcion;
+    Usuario *nuevo;
+    Usuario *encontrado;
+    char correo[MAX_CORREO];
+
+    do{
+        printf("\n========== CRUD USUARIOS ==========\n");
+        printf("\n1. Crear usuario");
+        printf("\n2. Buscar usuario por correo");
+        printf("\n3. Mostrar usuarios");
+        printf("\n4. Volver");
+
+        printf("\n\nSeleccione una opcion: ");
+        opcion = leerOpcion();
+
+        switch(opcion){
+
+            case 1:
+                nuevo = crearUsuario();
+
+                if(nuevo != NULL){
+                    insertarUsuario(raizUsuarios, nuevo);
+                }
+
+                break;
+
+            case 2:
+                leerTexto("\nIngrese el correo a buscar: ", correo, MAX_CORREO);
+
+                encontrado = buscarUsuarioPorCorreo(*raizUsuarios, correo);
+
+                if(encontrado != NULL){
+                    printf("\nUsuario encontrado:\n");
+                    printf("Correo: %s\n", encontrado->correo);
+                    printf("Nombre: %s\n", encontrado->nombre);
+                    printf("Pais: %s\n", encontrado->pais);
+                    printf("Nickname: %s\n", encontrado->nickname);
+                    printf("Plan: %s\n", encontrado->plan);
+                }
+                else{
+                    printf("\nNo existe un usuario con ese correo.\n");
+                }
+
+                break;
+
+            case 3:
+                if(*raizUsuarios == NULL){
+                    printf("\nNo hay usuarios registrados.\n");
+                }
+                else{
+                    printf("\nUsuarios registrados:\n");
+                    mostrarUsuariosInorden(*raizUsuarios);
+                }
+
+                break;
+
+            case 4:
+                printf("\nVolviendo al modo desarrollador...\n");
+                break;
+
+            default:
+                printf("\nOpcion invalida.\n");
+                break;
+        }
+
+    }while(opcion != 4);
 }

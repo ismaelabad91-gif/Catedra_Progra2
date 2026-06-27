@@ -1,9 +1,13 @@
 #include <stdio.h>
+
+#include "estructuras.h"
 #include "menus.h"
 
 int main(void){
 
-    menuPrincipal();
+    Usuario *raizUsuarios = NULL;
+
+    menuPrincipal(&raizUsuarios);
 
     return 0;
 }
