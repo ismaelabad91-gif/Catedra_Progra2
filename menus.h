@@ -1,6 +1,10 @@
 #ifndef MENUS_H
 #define MENUS_H
 
-int menuPrincipal(void);
+void menuPrincipal(void);
+int leerOpcion(void);
+
+void menuIngresar(void);
+void menuDesarrollador(void);
 
 #endif
