@@ -1,15 +1,27 @@
 #include <stdio.h>
-#include <string.h>
 
+#include "estructuras.h"
 #include "menus.h"
-#include "usuarios.h"
-#include "historial.h"
+#include "anuncios.h"
+#include "persistencia.h"
 
 int main(void){
 
     Usuario *raizUsuarios = NULL;
+    Artista *raizArtistas = NULL;
+    ColaAnuncios colaAnuncios;
 
-    menuPrincipal(&raizUsuarios);//Ver en menus.c
+    inicializarColaAnuncios(&colaAnuncios);
+
+    cargarUsuariosDesdeArchivo(&raizUsuarios, "usuarios.txt");
+    cargarAnunciosDesdeArchivo(&colaAnuncios, "anuncios.txt");
+    cargarArtistasDesdeArchivo(&raizArtistas, "artistas.txt");
+
+    menuPrincipal(&raizUsuarios, &raizArtistas, &colaAnuncios);
+
+    guardarUsuariosEnArchivo(raizUsuarios, "usuarios.txt");
+    guardarAnunciosEnArchivo(colaAnuncios, "anuncios.txt");
+    guardarArtistasEnArchivo(raizArtistas, "artistas.txt");
 
     return 0;
 }

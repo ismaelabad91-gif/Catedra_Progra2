@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "usuarios.h"
+
+#define VALOR_PREMIUM 5.00
 
 /* Lee una cadena con espacios */
 static void leerCadena(char mensaje[], char destino[], int tamanio){
@@ -13,6 +16,24 @@ static void leerCadena(char mensaje[], char destino[], int tamanio){
 
     /* Elimina el salto de linea que deja fgets */
     destino[strcspn(destino, "\n")] = '\0';
+}
+
+/* Calcula la fecha de vencimiento un mes despues de la fecha actual */
+static void calcularFechaPremium(char destino[]){
+
+    time_t tiempoActual;
+    struct tm fecha;
+
+    tiempoActual = time(NULL);
+    fecha = *localtime(&tiempoActual);
+
+    /* Suma un mes a la fecha actual */
+    fecha.tm_mon = fecha.tm_mon + 1;
+
+    /* Ajusta automaticamente el mes y el anio si es necesario */
+    mktime(&fecha);
+
+    strftime(destino, MAX_FECHA, "%d/%m/%Y", &fecha);
 }
 
 /* Crea un usuario nuevo reservando memoria con malloc */
@@ -158,25 +179,23 @@ void comprarPremium(Usuario *usuario){
 
     if(usuario->premiumActivo == 1){
         printf("\nEl usuario ya tiene premium activo.\n");
+        printf("Fecha de vencimiento: %s\n", usuario->fechaVencimientoPremium);
         return;
     }
-
-    printf("\n===== COMPRAR PREMIUM =====\n");
 
     usuario->premiumActivo = 1;
     strcpy(usuario->plan, "premium");
 
-    printf("Ingrese fecha de vencimiento del plan, formato dd/mm/aaaa: ");
-    fgets(usuario->fechaVencimientoPremium, MAX_FECHA, stdin);
-    usuario->fechaVencimientoPremium[strcspn(usuario->fechaVencimientoPremium, "\n")] = '\0';
-
-    printf("Ingrese valor pagado: ");
-    scanf("%f", &(usuario->valorPremium));
+    usuario->valorPremium = VALOR_PREMIUM;
+    calcularFechaPremium(usuario->fechaVencimientoPremium);
 
     printf("\nPlan premium comprado correctamente.\n");
+    printf("Valor: $%.2f\n", usuario->valorPremium);
+    printf("Valido hasta: %s\n", usuario->fechaVencimientoPremium);
 }
 
 /* Renueva el plan premium */
+/* Renueva el plan premium por un mes mas desde la fecha actual */
 void renovarPremium(Usuario *usuario){
 
     if(usuario == NULL){
@@ -188,14 +207,10 @@ void renovarPremium(Usuario *usuario){
         return;
     }
 
-    printf("\n===== RENOVAR PREMIUM =====\n");
-
-    printf("Ingrese nueva fecha de vencimiento, formato dd/mm/aaaa: ");
-    fgets(usuario->fechaVencimientoPremium, MAX_FECHA, stdin);
-    usuario->fechaVencimientoPremium[strcspn(usuario->fechaVencimientoPremium, "\n")] = '\0';
-
-    printf("Ingrese nuevo valor pagado: ");
-    scanf("%f", &(usuario->valorPremium));
+    usuario->valorPremium = VALOR_PREMIUM;
+    calcularFechaPremium(usuario->fechaVencimientoPremium);
 
     printf("\nPlan premium renovado correctamente.\n");
+    printf("Valor: $%.2f\n", usuario->valorPremium);
+    printf("Nueva fecha de vencimiento: %s\n", usuario->fechaVencimientoPremium);
 }
